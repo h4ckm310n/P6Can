@@ -68,19 +68,16 @@ class TaintNode
 
     public function isSource()
     {
-        //return $this->is_source;
         return $this->node_type === 1;
     }
 
     public function isSecuring()
     {
-        //return $this->is_securing;
         return $this->node_type === 2;
     }
 
     public function isSink()
     {
-        //return $this->is_sink;
         return $this->node_type === 3;
     }
 

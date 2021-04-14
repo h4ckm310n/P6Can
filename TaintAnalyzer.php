@@ -31,12 +31,9 @@ class TaintAnalyzer
         $this->return_val = ["var" => null, "tainted" => false, "vul_level" => 0];
 
         $this->analyzeBlock($this->basic_blocks["START"]);
-        //echo json_encode(array_keys($this->tainted))."\n";
-        //print_r($this->tainted);
-        //$this->output_result();
     }
 
-    public function output_result($level)
+    public function outputResult($level)
     {
         //echo "In ".$this->callee_name.":\n";
 
@@ -50,24 +47,27 @@ class TaintAnalyzer
             if (count($successors) == 0 && !$node->isSink() && $level>0)
             {
                 echo str_repeat("  ", $level)."In ".$this->callee_name.":\n";
-                echo str_repeat("  ", $level)."Taint Path: ".json_encode($path)."\n";
+                echo str_repeat("  ", $level)."Taint path: ".json_encode($path)."\n";
                 echo str_repeat("  ", $level)."Source: ".$path[0].", in line ".$this->tainted[$path[0]]->getLine()->getLn().": ";
                 echo $this->tainted[$path[0]]->getLine()->getPHPCode()."\n";
             }
             if ($node->isSink())
             {
                 echo str_repeat("  ", $level)."In ".$this->callee_name.":\n";
-                echo str_repeat("  ", $level)."Taint Path: ".json_encode($path)."\n";
+                echo str_repeat("  ", $level)."Taint path: ".json_encode($path)."\n";
                 echo str_repeat("  ", $level)."Source: ".$path[0].", in line ".$this->tainted[$path[0]]->getLine()->getLn().": ";
                 echo $this->tainted[$path[0]]->getLine()->getPHPCode()."\n";
                 if (isset($this->callee_analyzers[$path[0]]))
-                    $this->callee_analyzers[$path[0]]->output_result($level+1);
+                    $this->callee_analyzers[$path[0]]->outputResult($level+1);
                 echo str_repeat("  ", $level)."Sink: ".$path[count($path)-1].", in line ".$node->getLine()->getLn().": ";
                 echo $node->getLine()->getPHPCode()."\n";
                 if (($sink_type=$node->getSinkType()) !== null)
-                    echo str_repeat("  ", $level)."Sink type: ".$sink_type."\n";
+                {
+                    echo str_repeat("  ", $level)."Vulnerability type: ".$sink_type."\n";
+                    echo str_repeat("  ", $level)."Vulnerability level: ".$node->getVulLevel()."\n";
+                }
                 if (isset($this->callee_analyzers[$path[count($path)-1]]))
-                    $this->callee_analyzers[$path[count($path)-1]]->output_result($level+1);
+                    $this->callee_analyzers[$path[count($path)-1]]->outputResult($level+1);
             }
 
             foreach ($successors as $successor)

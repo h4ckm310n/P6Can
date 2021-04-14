@@ -1,25 +1,5 @@
 <?php
 
-/*
- * Definition:
- * -----------------------
- * Source:
- * $_GET, $_POST, $_REQUEST, $_COOKIE --> SRC
- *
- * -----------------------
- * Process:
- * = --> assign
- * md5() --> repair
- *
- * -----------------------
- * Sink:
- * system(), shell_exec() --> cmd
- * eval() --> eval
- * query --> sql
- * include, require --> inc  Expr_Include
- * echo --> echo  Stmt_Echo
- */
-
 
 use PhpParser\Node\Expr;
 use PhpParser\Node\Scalar;
@@ -274,7 +254,7 @@ class IRGenerator
 
         $queue = new SplQueue();
 
-        //if
+        // if
         $ln = $node->getLine();
         $this->parse($node->cond);
         $val1 = $this->var_stack->pop();
@@ -284,7 +264,7 @@ class IRGenerator
         $this->newLine($ln, "IF", $val1, null, $label);
         $queue->enqueue([$label, $stmts]);
 
-        //else if
+        // else if
         $elseifs = $node->elseifs;
         foreach ($elseifs as $elseif)
         {
@@ -297,7 +277,7 @@ class IRGenerator
             $queue->enqueue([$label, $elseif->stmts]);
         }
 
-        //else
+        // else
         $else = $node->else;
         if (count($else->stmts) > 0)
         {
@@ -308,14 +288,14 @@ class IRGenerator
             $queue->enqueue([$label, $else->stmts]);
         }
 
-        //goto
+        // goto
         $goto_label = "\$_L" . (string)count($this->labs);
         $this->newLab($goto_label);
         if (count($else->stmts) == 0)
             $this->newLine($ln, "GOTO", null, null, $goto_label);
         $queue->enqueue([$goto_label, []]);
 
-        //labels
+        // Labels
         while (!$queue->isEmpty())
         {
             $item = $queue->dequeue();
@@ -403,11 +383,11 @@ class IRGenerator
          */
 
         $ln = $expr->getLine();
-        //result
+        // Result
         if ($expr->var instanceof Expr\Variable)
             $result = $expr->var->name;
 
-        //expr
+        // Expr
         $this->parse($expr->expr);
         $val1 = $this->var_stack->pop();
         $val2 = null;
@@ -433,11 +413,11 @@ class IRGenerator
 
         $ln = $expr->getLine();
 
-        //var
+        // Var
         $this->parse($expr->var);
         $val1 = $this->var_stack->pop();
 
-        //dim
+        // Dim
         $this->parse($expr->dim);
         $val2 = $this->var_stack->pop();
 
@@ -459,11 +439,11 @@ class IRGenerator
         $ln = $expr->getLine();
         $val1 = $this->var_stack->pop();
 
-        //var
+        // Var
         $this->parse($expr->var);
         $val2 = $this->var_stack->pop();
 
-        //dim
+        // Dim
         $this->parse($expr->dim);
         $result = $this->var_stack->pop();
 
@@ -482,7 +462,7 @@ class IRGenerator
 
         $ln = $expr->getLine();
 
-        //op
+        // OP
         $ops = [
             "Plus" => "ADD",
             "Minus" => "SUB",
@@ -498,11 +478,11 @@ class IRGenerator
             "SmallerOrEqual" => "LE"
         ];
 
-        //left
+        // Left
         $this->parse($expr->left);
         $val1 = $this->var_stack->pop();
 
-        //right
+        // Right
         $this->parse($expr->right);
         $val2 = $this->var_stack->pop();
 

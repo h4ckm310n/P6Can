@@ -79,7 +79,7 @@ class CFGGenerator
             $curr_lines = $basic_blocks[$i]->getLines();
             $op = $curr_lines[count($curr_lines)-1]->getOp();
 
-            //jump
+            // Jump
             if ($op == "GOTO" ||
                 $op == "IF" ||
                 $op == "ELSEIF" ||
@@ -99,7 +99,7 @@ class CFGGenerator
                 }
             }
 
-            //origin order
+            // Origin order
             for ($j=0; $j<count($basic_blocks); ++$j)
             {
                 $next_lines = $basic_blocks[$j]->getLines();
