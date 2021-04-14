@@ -32,8 +32,6 @@ class IRGenerator
     private $ast;
     private $php_lines;
     private $tacs;
-    private $lab_tab;
-    private $tmp_tab;
     private $var_stack;
 
     function __construct($ast)
@@ -41,8 +39,8 @@ class IRGenerator
         $this->ast = $ast;
         $this->php_lines = $ast["php_lines"];
         $this->tacs = [];
-        $this->tmp_tab = new SymbolTable($ast["filename"]);
-        $this->lab_tab = new SymbolTable($ast["filename"]);
+        $this->tmps = [];
+        $this->labs = [];
         $this->var_stack = new SplStack();
         $this->generate();
         /*foreach ($this->tacs as $tac)
@@ -56,12 +54,12 @@ class IRGenerator
 
     private function newLab($lab)
     {
-        $this->lab_tab->insert($lab, $lab);
+        array_push($this->labs, $lab);
     }
     
     private function newTmp($tmp)
     {
-        $this->tmp_tab->insert($tmp, $tmp);
+        array_push($this->tmps, $tmp);
     }
 
     private function newLine($ln, $op, $val1, $val2, $result)
@@ -96,7 +94,7 @@ class IRGenerator
             || $node instanceof Scalar\String_ || $node instanceof Scalar\EncapsedStringPart)
         {
             $ln = $node->getLine();
-            $result = "\$_t".(string)$this->tmp_tab->size();
+            $result = "\$_t".(string)count($this->tmps);
             $this->newTmp($result);
             $this->newLine($ln, "SCALAR", $node->value, null, $result);
             $this->var_stack->push($result);
@@ -104,7 +102,7 @@ class IRGenerator
         else if ($node instanceof Scalar\MagicConst)
         {
             $ln = $node->getLine();
-            $result = "\$_t".(string)$this->tmp_tab->size();
+            $result = "\$_t".(string)count($this->tmps);
             $val1 = str_replace("Scalar_MagicConst_", "", $node->getType());
             $this->newTmp($result);
             $this->newLine($ln, "MAGICCONST", $val1, null, $result);
@@ -133,7 +131,7 @@ class IRGenerator
         foreach ($part_ids as $part)
             $this->newLine($ln, "ENCAPEXPR", null, null, $part);
 
-        $result = "\$_t".(string)$this->tmp_tab->size();
+        $result = "\$_t".(string)count($this->tmps);
         $this->newTmp($result);
         $this->newLine($ln, "ENCAPSED", count($expr->parts), null, $result);
         $this->var_stack->push($result);
@@ -281,7 +279,7 @@ class IRGenerator
         $this->parse($node->cond);
         $val1 = $this->var_stack->pop();
         $stmts = $node->stmts;
-        $label = "\$_L".(string)$this->lab_tab->size();
+        $label = "\$_L".(string)count($this->labs);
         $this->newLab($label);
         $this->newLine($ln, "IF", $val1, null, $label);
         $queue->enqueue([$label, $stmts]);
@@ -293,7 +291,7 @@ class IRGenerator
             $elseif_ln = $elseif->getLine();
             $this->parse($elseif->cond);
             $val1 = $this->var_stack->pop();
-            $label = "\$_L".(string)$this->lab_tab->size();
+            $label = "\$_L".(string)count($this->labs);
             $this->newLab($label);
             $this->newLine($elseif_ln, "ELSEIF", $val1, null, $label);
             $queue->enqueue([$label, $elseif->stmts]);
@@ -304,14 +302,14 @@ class IRGenerator
         if (count($else->stmts) > 0)
         {
             $else_ln = $else->getLine();
-            $label = "\$_L".(string)$this->lab_tab->size();
+            $label = "\$_L".(string)count($this->labs);
             $this->newLab($label);
             $this->newLine($else_ln, "ELSE", null, null, $label);
             $queue->enqueue([$label, $else->stmts]);
         }
 
         //goto
-        $goto_label = "\$_L" . (string)$this->lab_tab->size();
+        $goto_label = "\$_L" . (string)count($this->labs);
         $this->newLab($goto_label);
         if (count($else->stmts) == 0)
             $this->newLine($ln, "GOTO", null, null, $goto_label);
@@ -336,16 +334,16 @@ class IRGenerator
         if ($node instanceof Stmt\While_)
         {
             $ln = $node->getLine();
-            $label1 = "\$_L".(string)$this->lab_tab->size();
+            $label1 = "\$_L".(string)count($this->labs);
             $this->newLab($label1);
             $this->newLine($ln, "LAB", null, null, $label1);
             $this->parse($node->cond);
             $val1 = $this->var_stack->pop();
             $stmts = $node->stmts;
-            $label2 = "\$_L".(string)$this->lab_tab->size();
+            $label2 = "\$_L".(string)count($this->labs);
             $this->newLab($label2);
             $this->newLine($ln, "IF", $val1, null, $label2);
-            $label3 = "\$_L".(string)$this->lab_tab->size();
+            $label3 = "\$_L".(string)count($this->labs);
             $this->newLab($label3);
             $this->newLine($ln, "GOTO", null, null, $label3);
             $this->newLine($ln, "LAB", null, null, $label2);
@@ -391,7 +389,7 @@ class IRGenerator
 
         $ln = $expr->getLine();
         $name = $expr->name->parts[0];
-        $result = "\$_t".(string)$this->tmp_tab->size();
+        $result = "\$_t".(string)count($this->tmps);
         $this->newTmp($result);
         $this->newLine($ln, "CALL", $name, count($expr->args), $result);
         $this->var_stack->push($result);
@@ -416,7 +414,7 @@ class IRGenerator
 
         if ($expr->var instanceof Expr\ArrayDimFetch) 
         {
-            $result = "\$_t".(string)$this->tmp_tab->size();
+            $result = "\$_t".(string)count($this->tmps);
             $this->newTmp($result);
             $this->var_stack->push($result);
         }
@@ -444,7 +442,7 @@ class IRGenerator
         $val2 = $this->var_stack->pop();
 
         //
-        $result = "\$_t".(string)$this->tmp_tab->size();
+        $result = "\$_t".(string)count($this->tmps);
         $this->newTmp($result);
         $this->newLine($ln, "ARRLD", $val1, $val2, $result);
         $this->var_stack->push($result);
@@ -508,7 +506,7 @@ class IRGenerator
         $this->parse($expr->right);
         $val2 = $this->var_stack->pop();
 
-        $result = "\$_t".(string)$this->tmp_tab->size();
+        $result = "\$_t".(string)count($this->tmps);
         $this->newTmp($result);
         $op = $ops[str_replace("Expr_BinaryOp_", "", $expr->getType())];
         $this->newLine($ln, $op, $val1, $val2, $result);

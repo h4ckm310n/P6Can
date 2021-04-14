@@ -5,14 +5,11 @@ use PhpParser\NodeDumper;
 
 require __DIR__.'/vendor/autoload.php';
 
-require "IncludeAnalyzer.php";
 require "ASTParser.php";
 require "IRGenerator.php";
 require "ScopeExtractor.php";
-require "SymTabBuilder.php";
 require "CFGGenerator.php";
 require "SSAConstructor.php";
-require "CGGenerator.php";
 require "TaintAnalyzer.php";
 
 
@@ -26,16 +23,6 @@ $asts = $ast_parser->getASTs();
 //print_r($asts[0]["nodes"]);
 //return;
 
-//$inc_analyzer = new IncludeAnalyzer($proj_path, $asts);
-//return;
-
-/*// Build symbol tables
-$symtabs = [];
-foreach ($asts as $ast)
-{
-    $symtab_builder = new SymTabBuilder($ast);
-    array_push($symtabs, ["filename" => $ast["filename"], "symtabs" => $symtab_builder->getSymTabs()]);
-}*/
 
 //ir
 $tacs = [];
@@ -70,15 +57,6 @@ for ($i=0; $i<count($scope_trees); ++$i)
     $ssa_con = new SSAConstructor($scope_trees[$i]["scope_tree"]);
     $scope_trees[$i]["scope_tree"] = $ssa_con->getScopeNode();
 }
-
-//CG
-/*$cgs = [];
-for ($i=0; $i<count($scope_trees); ++$i)
-{
-    echo "Generating CG for ".$scope_trees[$i]["filename"]."\n";
-    $cg_gen = new CGGenerator($scope_trees[$i]["scope_tree"]);
-    array_push($cgs, ["filename" => $scope_trees[$i]["filename"], "cg" => $cg_gen->getCG()]);
-}*/
 
 //Taint Analysis
 for ($i=0; $i<count($scope_trees); ++$i)
