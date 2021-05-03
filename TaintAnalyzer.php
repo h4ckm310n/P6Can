@@ -141,12 +141,14 @@ class TaintAnalyzer
 
             elseif (($level = $this->findSecOP($op, $val1)) > 0)
             {
-                if (count($tainted_args) > 0)
+                if (count($tainted_args) > 0 && $level != 3)
                 {
                     $this->tainted[$val1."#".(string)$this->count_vals[$val1]] = new TaintNode($val1, $line, 2, $level);
                     $this->tainted[$val1."#".(string)$this->count_vals[$val1]]->setNameWithID($val1."#".(string)$this->count_vals[$val1]);
                     foreach ($tainted_args as $arg)
                         $this->connectNodes($arg["name"], $val1."#" .(string)$this->count_vals[$val1]);
+                    $this->tainted[$result] = new TaintNode($result, $line, 0, $level);
+                    $this->connectNodes($val1."#".(string)$this->count_vals[$val1], $result);
                 }
 
                 $tainted_args = [];
@@ -205,7 +207,7 @@ class TaintAnalyzer
                 }
                 else
                 {
-                    $this->tainted[$op."#".(string)$this->count_vals[$op]] = new TaintNode($op, $line, 3, $this->tainted[$val1]->getVulLevel());
+                    $this->tainted[$op."#".(string)$this->count_vals[$op]] = new TaintNode($op, $line, 3, $this->tainted[$result]->getVulLevel());
                     $this->tainted[$op."#".(string)$this->count_vals[$op]]->setNameWithID($op."#".(string)$this->count_vals[$op]);
                     array_push($this->sinks, $op."#".(string)$this->count_vals[$op]);
                     $this->connectNodes($result, $op."#".(string)$this->count_vals[$op]);
@@ -378,7 +380,8 @@ class TaintAnalyzer
 
     private function findSecOP($op, $val)
     {
-        $sec_funcs = ["md5" => 3, "preg_match" => 2, "preg_replace" => 2];
+        $sec_funcs = ["md5" => 3, "sha1" => 3, "crypt" => 3,
+                      "preg_match" => 2, "preg_replace" => 2, "str_replace" => 2, "htmlspecialchars" => 2, "strip_tags" => 2, "escapeshellcmd" => 2];
         if ($op === "CALL" && in_array($val, array_keys($sec_funcs), true))
         {
             if (!isset($this->count_vals[$val]))

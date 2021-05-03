@@ -220,11 +220,6 @@ class IRGenerator
         $this->newLine($ln, "RETURN", null, null, $result);
     }
 
-    private function parseClass($node)
-    {
-
-    }
-
     private function parseIf($node)
     {
         /*

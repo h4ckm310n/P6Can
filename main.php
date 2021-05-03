@@ -13,7 +13,7 @@ require "SSAConstructor.php";
 require "TaintAnalyzer.php";
 
 
-$proj_path = "./projects/taint_test1";
+$proj_path = "./projects/taint_test3";
 
 // Parse AST
 $ast_parser = new ASTParser($proj_path);

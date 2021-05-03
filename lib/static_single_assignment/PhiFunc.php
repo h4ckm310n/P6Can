@@ -13,7 +13,7 @@ class PhiFunc
         $this->var = $var;
         $this->params = [];
         for ($i=0; $i<$n; ++$i)
-            array_push($this->params, $var);
+            array_push($this->params, null);
     }
 
     public function setVar($var)
