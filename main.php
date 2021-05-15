@@ -13,16 +13,11 @@ require "SSAConstructor.php";
 require "TaintAnalyzer.php";
 
 
-$proj_path = "./projects/taint_test3";
+$proj_path = "";  // Path to project
 
 // Parse AST
 $ast_parser = new ASTParser($proj_path);
 $asts = $ast_parser->getASTs();
-//$dumper = new NodeDumper();
-//echo $dumper->dump($asts[0]["nodes"]);
-//print_r($asts[0]["nodes"]);
-//return;
-
 
 // IR
 $tacs = [];
