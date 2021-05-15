@@ -20,13 +20,13 @@ class ASTParser
         $this->files = [];
         $this->codes = [];
         $this->asts = [];
-        $this->scan_files($this->path);
+        $this->scanFiles($this->path);
         foreach ($this->files as $file)
-            $this->get_content($file);
+            $this->getContent($file);
         $this->parse();
     }
 
-    private function scan_files($path)
+    private function scanFiles($path)
     {
         $files = scandir($path);
         foreach ($files as $fn)
@@ -34,14 +34,14 @@ class ASTParser
             if ($fn == ".." || $fn == ".")
                 continue;
             else if (is_dir($path.'/'.$fn)) {
-                $this->scan_files($path.'/'.$fn);
+                $this->scanFiles($path.'/'.$fn);
             }
             else if (preg_match("/.*\.php$/i", $fn))
                 array_push($this->files, $path.'/'.$fn);
         }
     }
 
-    private function get_content($file)
+    private function getContent($file)
     {
         $content = file_get_contents($file);
         array_push($this->codes, ["filename" => $file, "content" => $content]);

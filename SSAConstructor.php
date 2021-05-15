@@ -317,7 +317,6 @@ class SSAConstructor
                     if (!isset($defs[$var]))
                         $defs[$var] = [];
                     array_push($defs[$var], $i);
-                    break;
                 }
             }
         }
@@ -374,6 +373,7 @@ class SSAConstructor
         $search = function ($b) use (&$count_var, &$stack_var, $basic_blocks, &$dj_nodes, $vars, $use_result_ops, $use_val_ops, &$whichPred, &$search)
         {
             $stack_count = [];
+            $origins = [];
             foreach ($vars as $var)
                 $stack_count[$var] = 0;
 
@@ -381,6 +381,7 @@ class SSAConstructor
             $phis = $basic_blocks[$b]->getPhis();
             foreach (array_keys($phis) as $pv)
             {
+                array_push($origins, $pv);
                 $vi = $pv."\$".(string)$count_var[$pv];
                 $basic_blocks[$b]->changePhiKey($vi, $pv);
                 $stack_var[$pv]->push($count_var[$pv]);
@@ -440,6 +441,8 @@ class SSAConstructor
                 foreach (array_keys($phis) as $key)
                 {
                     $v = $phis[$key]->getOrigin();
+                    if (!in_array($b, $this->defs[$v], true) && !in_array($v, $origins, true))
+                        continue;
                     $vi = $v."\$".(string)$stack_var[$v]->top();
                     $basic_blocks[$successor]->changePhiVal($key, $vi, $j);
                 }

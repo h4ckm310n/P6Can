@@ -27,10 +27,10 @@ class IRLine
         $v1 = $this->val1 === null ? "" : " ".(string)$this->val1;
         $v2 = $this->val2 === null ? "" : " ".(string)$this->val2;
         $r = $this->result === null ? "" : " ".(string)$this->result;
-        return $this->convert_esc("$this->op$v1$v2$r");
+        return $this->convertEsc("$this->op$v1$v2$r");
     }
 
-    private function convert_esc($str)
+    private function convertEsc($str)
     {
         $str = str_replace("\n", "\\n", $str);
         $str = str_replace("\t", "\\t", $str);
